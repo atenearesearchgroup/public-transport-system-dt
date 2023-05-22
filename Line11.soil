@@ -1,0 +1,48 @@
+reset
+
+!new Clock('clock')
+!clock.now := 0
+
+!new BusVehicle('bus1')
+!bus1.vehicleId := 1
+
+!insert (clock, bus1) into Timing
+
+
+!new BusRoute('route11')
+!route11.routeId := 11
+!route11.length := 11
+!route11.origin := 'Universidad'
+!route11.destination := 'El Palo  (P.Virginia)'
+!route11.timetable := Sequence{}
+
+!insert (bus1, route11) into RouteFollowing
+
+!route11.addTimeToTimetable(0)
+!route11.addTimeToTimetable(79)
+!route11.addTimeToTimetable(107)
+!route11.addTimeToTimetable(60)
+!route11.addTimeToTimetable(77)
+!route11.addTimeToTimetable(380)
+!route11.addTimeToTimetable(131)
+!route11.addTimeToTimetable(44)
+!route11.addTimeToTimetable(104)
+!route11.addTimeToTimetable(38)
+!route11.addTimeToTimetable(220)
+
+!route11.createBusStop(2056, 36.71639, -4.4750605)
+!route11.createBusStop(850, 36.716194, -4.473592)
+!route11.createBusStop(832, 36.716652, -4.470169)
+!route11.createBusStop(472, 36.71777, -4.4645534)
+!route11.createBusStop(476, 36.716038, -4.46363)
+!route11.createBusStop(473, 36.713665, -4.463148)
+!route11.createBusStop(2055, 36.714672, -4.449508)
+!route11.createBusStop(1460, 36.71626, -4.441017)
+!route11.createBusStop(1461, 36.716652, -4.438692)
+!route11.createBusStop(1462, 36.716938, -4.432869)
+!route11.createBusStop(1463, 36.716763, -4.4305334)
+
+!create stopInfo2056 : StopInformation between (bus1, route11.stops->at(1))
+!stopInfo2056.arrivalTime := 0
+!stopInfo2056.departureTime := 0
+!stopInfo2056.routeId := route11.routeId

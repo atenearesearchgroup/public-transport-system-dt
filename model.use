@@ -1,0 +1,209 @@
+model PublicTransportSystem
+
+abstract class ActiveObject
+    operations
+        action() begin end
+end
+
+class Clock
+    attributes
+        now : Integer       init : 0
+        tickTime : Integer  init : 60
+    operations
+        tick()
+            begin
+                for o in self.ao do
+                    o.action();
+                end;
+                self.now := self.now + self.tickTime;
+            end
+end
+
+association Timing between 
+    Clock [1] role clock
+    ActiveObject [*] role ao ordered
+end
+
+class DA < ActiveObject
+end
+
+class DARecord
+    attributes
+        lastModification : Integer
+end
+
+class Individual < DARecord
+    attributes
+        indId : Integer
+        gender : String
+end
+
+class Passenger < Individual
+    attributes
+        transportTicket : Integer
+end
+
+class Driver < Individual
+end
+
+class Journey
+    attributes
+        startTime : Integer
+        arrivalTime : Integer
+        originLat : Real
+        originLong : Real
+        destinationLat : Real
+        destinationLong : Real
+end
+
+class Stop
+    attributes
+        stopId : Integer
+        lat : Real
+        long : Real
+end
+
+class RailStop < Stop
+end
+
+class BusStop < Stop
+end
+
+class Vehicle < ActiveObject
+    attributes
+        vehicleId : Integer
+        speed : Real
+        capacity : Integer
+        occupancy : Integer
+        doorNb : Integer
+end
+
+class BusVehicle < Vehicle
+    operations
+        action()
+            begin
+                declare currentRoute : BusRoute, currentStop : BusStop, nextStop : BusStop, nextStopInfo : StopInformation, nextStopIndex : Integer;
+                currentRoute := self.route->asSequence()->first();
+                if self.stopInformation->isEmpty() then
+                    -- If there's no StopInformation, it means that bus is at the first stop
+                    currentStop := currentRoute.stops->first();
+                    -- Create new StopInformation for the first stop
+                    insert (self, currentStop) into StopInformation;
+                    nextStopInfo := self.stopInformation->select(s | s.busStop = currentStop)->asSequence()->first();
+                    nextStopInfo.arrivalTime := self.clock.now;
+                    nextStopInfo.departureTime := self.clock.now;
+                    nextStopInfo.routeId := currentRoute.routeId;
+                else
+                    currentStop := self.stopInformation.busStop->asSequence()->first();
+                    nextStopIndex := currentRoute.stops->indexOf(currentStop) + 1;
+                    if nextStopIndex <= currentRoute.stops->size() then
+                        declare totalElapsedTime : Integer;
+                        nextStop := currentRoute.stops->at(nextStopIndex);
+                        totalElapsedTime := currentRoute.timetable->subSequence(1, nextStopIndex)->sum();
+                        if self.clock.now + self.clock.tickTime >= totalElapsedTime then
+                            -- Delete the StopInformation for the current stop
+                            for si in self.stopInformation do
+                                if si.busStop = currentStop then
+                                    destroy si;
+                                end;
+                            end;
+                            -- Create new StopInformation for the next stop
+                            insert (self, nextStop) into StopInformation;
+                            nextStopInfo := self.stopInformation->select(s | s.busStop = nextStop)->asSequence()->first();
+                            nextStopInfo.arrivalTime := totalElapsedTime;
+                            nextStopInfo.departureTime := totalElapsedTime;
+                            nextStopInfo.routeId := currentRoute.routeId;
+                        end;
+                    end;
+                end;
+            end
+end
+
+
+
+class RailVehicle < Vehicle
+end
+
+class Route
+    attributes
+        routeId : Integer
+        length: Integer
+        origin: String
+        destination: String
+end
+
+class BusRoute < Route
+    attributes
+        timetable : Sequence(Integer) --init : Sequence{}
+    operations
+        createBusStop(stopId : Integer, lat : Real, long : Real) : BusStop
+            begin
+                declare s : BusStop;
+                s := new BusStop('stop'.concat(stopId.toString()));
+                s.stopId := stopId;
+                s.lat := lat;
+                s.long := long;
+                insert (self, s) into RouteStops;
+                result := s
+            end
+        addTimeToTimetable(time : Integer)
+            begin
+                self.timetable := self.timetable->append(time);
+            end
+end
+
+class RailRoute < Route
+end
+
+associationclass BeginInfo
+    between
+        Stop[*] role beginStop
+        Journey[*] role beginJourney
+    attributes
+        arrivalTimeStop : Integer
+        timeBoardBus : Integer
+end
+
+associationclass EndInfo
+    between
+        Stop[*] role endStop
+        Journey[*] role endJourney
+    attributes
+        dropTime : Integer
+end
+
+associationclass StopInformation
+    between
+        BusVehicle[*]
+        BusStop[*]
+    attributes
+        arrivalTime : Integer
+        departureTime : Integer
+        routeId : Integer
+end
+
+
+composition DARecords between
+    DA[1] role owner
+    DARecord[*] role records
+end
+
+association Driving between
+    Driver[1..*]
+    Vehicle[1..*]
+end
+
+association RouteFollowing between
+    BusVehicle[*]
+    BusRoute[*] role route
+end
+
+composition RouteStops between
+    BusRoute[*]
+    BusStop[*] role stops ordered
+end
+
+association JourneyInfo between
+    Journey[*]
+    Passenger[1]
+end
