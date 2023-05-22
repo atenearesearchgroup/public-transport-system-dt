@@ -19,7 +19,7 @@ class Clock
             end
 end
 
-association Timing between 
+association timing between 
     Clock [1] role clock
     ActiveObject [*] role ao ordered
 end
@@ -143,7 +143,7 @@ class BusRoute < Route
                 s.stopId := stopId;
                 s.lat := lat;
                 s.long := long;
-                insert (self, s) into RouteStops;
+                insert (self, s) into routeStops;
                 result := s
             end
         addTimeToTimetable(time : Integer)
@@ -183,27 +183,27 @@ associationclass StopInformation
 end
 
 
-composition DARecords between
+composition daRecords between
     DA[1] role owner
     DARecord[*] role records
 end
 
-association Driving between
+association driving between
     Driver[1..*]
     Vehicle[1..*]
 end
 
-association RouteFollowing between
+association routeFollowing between
     BusVehicle[*]
     BusRoute[*] role route
 end
 
-composition RouteStops between
+composition routeStops between
     BusRoute[*]
     BusStop[*] role stops ordered
 end
 
-association JourneyInfo between
+association journeyInfo between
     Journey[*]
     Passenger[1]
 end

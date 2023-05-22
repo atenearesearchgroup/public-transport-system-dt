@@ -6,7 +6,7 @@ reset
 !new BusVehicle('bus1')
 !bus1.vehicleId := 1
 
-!insert (clock, bus1) into Timing
+!insert (clock, bus1) into timing
 
 
 !new BusRoute('route11')
@@ -16,7 +16,7 @@ reset
 !route11.destination := 'El Palo  (P.Virginia)'
 !route11.timetable := Sequence{}
 
-!insert (bus1, route11) into RouteFollowing
+!insert (bus1, route11) into routeFollowing
 
 !route11.addTimeToTimetable(0)
 !route11.addTimeToTimetable(79)
